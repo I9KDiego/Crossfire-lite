@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Crossfire-Lite</title>
+<title>Counter-Strike Lite</title>
 <style>
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 html,body{height:100%;margin:0;overflow:hidden;background:#000;color:#fff;font-family:"Segoe UI",Roboto,Arial,sans-serif;user-select:none}
@@ -88,21 +88,27 @@ function mkTex(c1,c2,nb){const c=document.createElement('canvas');c.width=c.heig
  if(!nb){x.strokeStyle='rgba(0,0,0,.3)';x.lineWidth=3;x.strokeRect(0,0,128,128)}const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;return t}
 const texWall=mkTex('#cdb88c','#b59d6e'),texWood=mkTex('#946033','#6f4622'),texFloor=mkTex('#d8c59a','#c2ac7c');
 const TX={wall:[texWall,'#b8a67a'],wood:[texWood,'#8a6a40'],blue:[mkTex('#2f6b8f','#265a78'),'#3d7fa8'],red:[mkTex('#9a3328','#7f2a21'),'#b8402f'],green:[mkTex('#3f6b3a','#345a30'),'#4f8a48'],sand:[mkTex('#b39b63','#9a834f'),'#a08a55'],house:[mkTex('#e6d9b8','#d6c8a2'),'#c9b98f']};
-const boxes=[],solids=[],shootables=[],picks=[];
+const boxes=[],solids=[],shootables=[],picks=[],platforms=[],upperWalls=[];
+function platform(x,z,w,d,y){platforms.push({x0:x-w/2,x1:x+w/2,z0:z-d/2,z1:z+d/2,y})}
+function uwall(x,z,w,d){upperWalls.push({x0:x-w/2,x1:x+w/2,z0:z-d/2,z1:z+d/2})}
+function hwallDCol(ax,f,a,b,ops){let p=a;
+ const put=(u,v)=>{if(v-u>.01){if(ax=='x')uwall((u+v)/2,f,v-u,.5);else uwall(f,(u+v)/2,.5,v-u)}};
+ for(const o of ops){put(p,o[0]);if(o[2]!='d')put(o[0],o[1]);p=o[1]}
+ put(p,b)}
 function box(x,z,w,d,h,k){k=k||(h>3?'wall':'wood');const t=TX[k][0].clone();t.needsUpdate=true;t.repeat.set(Math.max(w,d)/4,h/4);
  const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshLambertMaterial({map:t}));m.position.set(x,h/2,z);scene.add(m);
  solids.push(m);shootables.push(m);boxes.push({x0:x-w/2,x1:x+w/2,z0:z-d/2,z1:z+d/2,h,col:TX[k][1]})}
 [[0,-30.5,62,1,6],[0,30.5,62,1,6],[-30.5,0,1,62,6],[30.5,0,1,62,6],
- [-10,-8,8,1.5,4],[10,8,8,1.5,4],[-18,10,2,2,1.1],[-16,12,2,2,2.2],[18,-12,2.5,2.5,1.1],[20,-14.5,2,2,2],
- [-22,-18,10,1.5,3.5],[22,18,10,1.5,3.5],[-5,18,1.5,10,3.5],[5,-18,1.5,10,3.5],[15,-2,1.5,6,3],[-15,2,1.5,6,3],
+ [-10,-8,5,1.5,4],[10,8,5,1.5,4],[-18,10,2,2,1.1],[-8.4,12.6,2,2,2.2],[18,-12,2.5,2.5,1.1],
+ [-22,-18,10,1.5,3.5],[22,18,10,1.5,3.5],[-5,18,1.5,10,3.5],[5,-18,1.5,10,3.5],[13,-2,1.5,6,3],[-13,2,1.5,6,3],
  [-24,6,3,3,1.1],[24,-6,3,3,1.1],[0,-10,2,2,1.2],[0,10,2,2,1.2]].forEach(a=>box(...a));
 [[-12,-24,6,2.4,2.6,'blue'],[12,24,6,2.4,2.6,'red'],[26,-20,2.4,6,2.6,'green'],[-26,20,2.4,6,2.6,'blue'],
- [-8,-22,4,.8,1,'sand'],[8,22,4,.8,1,'sand'],[26,14,.8,4,1,'sand'],[-26,-14,.8,4,1,'sand'],
+ [-8,-20,4,.8,1,'sand'],[8,20,4,.8,1,'sand'],[26,14,.8,4,1,'sand'],[-26,-14,.8,4,1,'sand'],
  [19.5,2,6,5,1.8],[-19.5,-2,6,5,1.8]].forEach(a=>box(...a));
 for(let i=0;i<5;i++){box(22.95+.9*i,2,.9,2,1.5-.3*i);box(-22.95-.9*i,-2,.9,2,1.5-.3*i)}
 const bGeo=new THREE.CylinderGeometry(.42,.42,1.1,12),bMat=new THREE.MeshLambertMaterial({color:0xb03a2e});
 function barrel(x,z){const m=new THREE.Mesh(bGeo,bMat);m.position.set(x,.55,z);scene.add(m);solids.push(m);shootables.push(m);boxes.push({x0:x-.45,x1:x+.45,z0:z-.45,z1:z+.45,h:1.1,col:'#b03a2e'})}
-[[-27,-8],[-27,-6.6],[27,8],[27,9.4],[10,-24],[-10,24],[14,14],[-14,-14]].forEach(a=>barrel(...a));
+[[-27,-8.4],[-27,-6],[27,8.4],[27,6],[10,-24],[-10,24],[14,14],[-14,-14]].forEach(a=>barrel(...a));
 function decal(x,z,ch,col){const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');g.globalAlpha=.3;g.fillStyle=col;g.fillRect(0,0,128,128);g.globalAlpha=1;g.strokeStyle=col;g.lineWidth=6;g.strokeRect(6,6,116,116);g.fillStyle=col;g.font='bold 80px sans-serif';g.textAlign='center';g.fillText(ch,64,92);
  const m=new THREE.Mesh(new THREE.PlaneGeometry(9,9),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c),transparent:true}));m.rotation.x=-Math.PI/2;m.position.set(x,.03,z);scene.add(m)}
 decal(22,-23,'A','#ffcc33');decal(-22,22,'B','#ffcc33');
@@ -152,7 +158,13 @@ function hwallD(ax,f,y0,H,a,b,ops){let p=a;
 hwallD('x',-3.8,Y0,H2,-5,5,[[-3.3,-1.7]]);
 hwallD('x',3.8,Y0,H2,-5,5,[[-4,-2.4],[-.9,.9,'d'],[2.4,4]]);
 hwallD('z',-4.8,Y0,H2,-3.6,3.6,[[-1,1]]);hwallD('z',4.8,Y0,H2,-3.6,3.6,[[-1,1]]);
+hwallDCol('x',-3.8,-5,5,[[-3.3,-1.7]]);
+hwallDCol('x',3.8,-5,5,[[-4,-2.4],[-.9,.9,'d'],[2.4,4]]);
+hwallDCol('z',-4.8,-3.6,3.6,[[-1,1]]);hwallDCol('z',4.8,-3.6,3.6,[[-1,1]]);
 const rg=new THREE.Group(),rm=new THREE.Mesh(new THREE.ConeGeometry(1,2.4,4),roofM);rm.rotation.y=Math.PI/4;rm.position.y=1.2;rg.add(rm);rg.scale.set(7.92,1,6.5);rg.position.set(0,Y0+H2,0);scene.add(rg);shootables.push(rm);
+// ---- Escada externa para o 2º andar (lado leste) ----
+for(let i=0;i<11;i++)box(8.0-i*0.31,2.0,0.55,1.5,+((i+1)*(Y0/11)).toFixed(2),'wood');
+platform(0,0,10.2,8.0,Y0+.08);platform(0,5.45,11.4,3,Y0+.21);
 deco(3.2,7.6,-2,.9,5.0,.9,brickM,1);
 const trM=new THREE.MeshLambertMaterial({color:0x6b4423}),leafM=[0x3f8a3a,0x357a32,0x4a9a44].map(c=>new THREE.MeshLambertMaterial({color:c})),trG=new THREE.CylinderGeometry(.22,.32,3.2,8),leafG=new THREE.SphereGeometry(1,10,8);
 function tree(x,z,sc){const t=new THREE.Mesh(trG,trM);t.scale.set(sc,sc,sc);t.position.set(x,1.6*sc,z);scene.add(t);solids.push(t);shootables.push(t);
@@ -162,9 +174,22 @@ function tree(x,z,sc){const t=new THREE.Mesh(trG,trM);t.scale.set(sc,sc,sc);t.po
 texFloor.repeat.set(20,20);
 const floor=new THREE.Mesh(new THREE.PlaneGeometry(62,62),new THREE.MeshLambertMaterial({map:texFloor}));floor.rotation.x=-Math.PI/2;scene.add(floor);shootables.push(floor);
 const SP=[[-25,-25],[25,-25],[0,-26],[-26,0],[26,4],[-25,25],[26,26],[0,-24]];
-function hitsBox(x,z,y,r){for(const b of boxes){if(b.h<=y+.35)continue;if(x>b.x0-r&&x<b.x1+r&&z>b.z0-r&&z<b.z1+r)return true}return false}
-function groundAt(x,z,y){let g=0;for(const b of boxes)if(x>b.x0-.3&&x<b.x1+.3&&z>b.z0-.3&&z<b.z1+.3&&b.h<=y+.35&&b.h>g)g=b.h;return g}
+function hitsBox(x,z,y,r){for(const b of boxes){if(b.h<=y+.35)continue;if(x>b.x0-r&&x<b.x1+r&&z>b.z0-r&&z<b.z1+r)return true}
+ for(const pl of platforms){if(y<pl.y-.6)continue;if(pl.y<=y+.35)continue;if(x>pl.x0-r&&x<pl.x1+r&&z>pl.z0-r&&z<pl.z1+r)return true}
+ for(const uw of upperWalls){if(y<Y0-.6||y>Y0+H2)continue;if(x>uw.x0-r&&x<uw.x1+r&&z>uw.z0-r&&z<uw.z1+r)return true}
+ return false}
+function groundAt(x,z,y){let g=0;for(const b of boxes)if(x>b.x0-.3&&x<b.x1+.3&&z>b.z0-.3&&z<b.z1+.3&&b.h<=y+.35&&b.h>g)g=b.h;
+ for(const pl of platforms)if(x>pl.x0&&x<pl.x1&&z>pl.z0&&z<pl.z1&&y>=pl.y-.6&&pl.y<=y+.35&&pl.y>g)g=pl.y;
+ return g}
 function move(p,dx,dz,y){let bl=false;if(!hitsBox(p.x+dx,p.z,y,.4))p.x+=dx;else bl=true;if(!hitsBox(p.x,p.z+dz,y,.4))p.z+=dz;else bl=true;return bl}
+function avoidDir(b,x,z,dx,dz,dt){
+ b._sx=(b._sx==null)?x:b._sx;b._sz=(b._sz==null)?z:b._sz;b._st=(b._st||0)+dt;
+ if(b._st>0.5){const moved=Math.hypot(x-b._sx,z-b._sz);b._stuck=moved<0.32;b._sx=x;b._sz=z;b._st=0;
+  if(!b._stuck)b.avoidSign=0}
+ if(!b._stuck)return[dx,dz];
+ if(!b.avoidSign)b.avoidSign=Math.random()<.5?1:-1;
+ const a=1.15*b.avoidSign,c=Math.cos(a),s=Math.sin(a);
+ return[dx*c-dz*s,dx*s+dz*c]}
 
 // ---------- Som ----------
 let ac=null,nbuf=null;
@@ -290,20 +315,21 @@ function damageBase(d){if(state!='fight')return;baseHP=Math.max(0,baseHP-d);upda
  if(baseHP<=0&&state!='dead')zombieGameOver()}
 function zombieGameOver(){state='dead';playing=false;needNew=true;tone(90,.8,.3,'sawtooth');if(document.exitPointerLock)document.exitPointerLock();
  $('msg').textContent='A base foi destruída! Você sobreviveu até a onda '+zWave+' · Kills: '+kills;showMenu(true)}
+function baseWaypoint(b,pz,px){if(b.side==null)b.side=px>=0?16:-16;if(pz<15)return{x:b.side,z:15};return{x:baseX,z:baseZ}}
 function zombieAI(b,p,dt){const dxP=P.x-p.x,dzP=P.z-p.z,dP=Math.hypot(dxP,dzP)||1;
  const dxB=baseX-p.x,dzB=baseZ-p.z,dB=Math.hypot(dxB,dzB)||1;
  b.g.position.y=Math.abs(Math.sin(performance.now()/200+p.x))*.05*(b.type=='mutante'?1.55:1);
  b.atkCd-=dt;b.see=dP<26;
- if(b.type=='anomalia'&&dP<16){
+ if(b.type=='anomalia'&&dP<9){
   b.los-=dt;if(b.los<=0){b.los=.3;const o=new THREE.Vector3(p.x,1.5,p.z),t=new THREE.Vector3(P.x,P.y+P.eye-.3,P.z);b.canSee=los1(b,dP,t.sub(o).normalize(),o)}
   if(b.canSee){b.g.rotation.y=Math.atan2(dxP,dzP);
    if(dP>6)steer(b,dxP/dP,dzP/dP,b.speed,dt);else if(dP<3.5)steer(b,-dxP/dP*.5,-dzP/dP*.5,b.speed,dt);
    if(b.atkCd<=0){b.atkCd=2+Math.random()*.8;throwGoo(p,new THREE.Vector3(P.x,1.6,P.z))}
    return}}
  if(dP<1.7){b.g.rotation.y=Math.atan2(dxP,dzP);if(b.atkCd<=0){b.atkCd=1+Math.random()*.4;hurt(b.dmg);tone(150,.1,.2,'sawtooth')}return}
- if(dB<2.4){b.g.rotation.y=Math.atan2(dxB,dzB);if(b.atkCd<=0){b.atkCd=1.2;damageBase(b.dmg*1.3)}return}
- if(dP<15){b.g.rotation.y=Math.atan2(dxP,dzP);steer(b,dxP/dP,dzP/dP,b.speed,dt)}
- else{b.g.rotation.y=Math.atan2(dxB,dzB);steer(b,dxB/dB,dzB/dB,b.speed,dt)}}
+ if(dB<2.6){b.g.rotation.y=Math.atan2(dxB,dzB);if(b.atkCd<=0){b.atkCd=.9;damageBase(b.dmg*1.4)}return}
+ if(dP<6){b.g.rotation.y=Math.atan2(dxP,dzP);steer(b,dxP/dP,dzP/dP,b.speed,dt)}
+ else{const wp=baseWaypoint(b,p.z,p.x),wdx=wp.x-p.x,wdz=wp.z-p.z,wd=Math.hypot(wdx,wdz)||1;b.g.rotation.y=Math.atan2(wdx,wdz);steer(b,wdx/wd,wdz/wd,b.speed,dt)}}
 
 // ---------- Efeitos / HUD ----------
 const fxGeo=new THREE.SphereGeometry(.06,6,5);
@@ -343,8 +369,7 @@ function shoot(){const w=gw();
 function stab(){kAnim=1;tone(240,.07,.12,'sawtooth');cam.updateMatrixWorld();rc.far=2.6;rc.setFromCamera(new THREE.Vector2(0,0),cam);
  const h=rc.intersectObjects(targets(),false)[0];
  if(h){const b=h.object.userData.bot;if(b){b.hp-=55;b.alert=8;hm=1;fx(h.point,0xaa0000,.3);if(b.hp<=0&&!b.dead)kill(b,false,true);else tone(700,.05,.15,'sine')}else if(h.face)fx(h.point,0x222222,4)}}
-function steer(b,vx,vz,sp,dt){if(b.det>0){b.det-=dt;const c=Math.cos(b.sa),s=Math.sin(b.sa),nx=vx*c-vz*s;vz=vx*s+vz*c;vx=nx}
- if(move(b.g.position,vx*sp*dt,vz*sp*dt,0)&&b.det<=0){b.det=1.2;b.sa=(Math.random()<.5?1:-1)*Math.PI/2}}
+function steer(b,vx,vz,sp,dt){const p=b.g.position,[ax,az]=avoidDir(b,p.x,p.z,vx,vz,dt);move(p,ax*sp*dt,az*sp*dt,0)}
 // ---------- Update ----------
 function los1(b,d,dir,org){los.set(org,dir);los.far=d;return los.intersectObjects(solids,false).length==0}
 function sndRoundTransition(){state='between';roundT=3.5;bomb=null;planting=0;hideBombModel();
