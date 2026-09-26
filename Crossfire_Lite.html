@@ -167,13 +167,13 @@ for(let z=4.05;z<=6.9;z+=1.05){deco(-5.6,Y0+.6,z,.1,.8,.1,railM,0);deco(5.6,Y0+.
 deco(-5.6,Y0+1.02,5.45,.12,.12,3,railM,0);deco(5.6,Y0+1.02,5.45,.12,.12,3,railM,0);
 function hwallD(ax,f,y0,H,a,b,ops){let p=a;
  const put=(u,v,hh,yb)=>{if(v-u>.01){const cx=(u+v)/2,w=v-u;
-  if(ax=='x')deco(cx,yb+hh/2,f,w,hh,.35,hdrM,1);else deco(f,yb+hh/2,cx,.35,hh,w,hdrM,1)}};
+  solids.push(ax=='x'?deco(cx,yb+hh/2,f,w,hh,.35,hdrM,1):deco(f,yb+hh/2,cx,.35,hh,w,hdrM,1))}};
  for(const o of ops){put(p,o[0],H,y0);const m=(o[0]+o[1])/2,w=o[1]-o[0];
-  if(o[2]=='d'){if(ax=='x'){deco(m,y0+H*.88,f,w,H*.25,.35,hdrM,1);deco(m,y0+H*.42,f,w,H*.8,.06,glassM)}
-   else{deco(f,y0+H*.88,m,.35,H*.25,w,hdrM,1);deco(f,y0+H*.42,m,.06,H*.8,w,glassM)}}
+  if(o[2]=='d'){if(ax=='x'){solids.push(deco(m,y0+H*.88,f,w,H*.25,.35,hdrM,1));deco(m,y0+H*.42,f,w,H*.8,.06,glassM)}
+   else{solids.push(deco(f,y0+H*.88,m,.35,H*.25,w,hdrM,1));deco(f,y0+H*.42,m,.06,H*.8,w,glassM)}}
   else{put(o[0],o[1],H*.32,y0);
-   if(ax=='x'){deco(m,y0+H*.88,f,w,H*.25,.35,hdrM,1);deco(m,y0+H*.58,f,w,H*.55,.08,glassM)}
-   else{deco(f,y0+H*.88,m,.35,H*.25,w,hdrM,1);deco(f,y0+H*.58,m,.08,H*.55,w,glassM)}}
+   if(ax=='x'){solids.push(deco(m,y0+H*.88,f,w,H*.25,.35,hdrM,1));deco(m,y0+H*.58,f,w,H*.55,.08,glassM)}
+   else{solids.push(deco(f,y0+H*.88,m,.35,H*.25,w,hdrM,1));deco(f,y0+H*.58,m,.08,H*.55,w,glassM)}}
   p=o[1]}
  put(p,b,H,y0)}
 hwallD('x',-3.8,Y0,H2,-5,5,[[-3.3,-1.7]]);
