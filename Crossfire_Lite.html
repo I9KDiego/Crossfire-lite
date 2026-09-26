@@ -149,14 +149,17 @@ function hwall(ax,f,a,b,ops){let p=a;
  put(p,b,3.2)}
 hwall('x',-3.8,-5,5,[[-3.3,-1.7,'w'],[-.9,.9,'d'],[1.7,3.3,'w']]);
 hwall('x',3.8,-5,5,[[-4,-2.4,'w'],[-.9,.9,'d'],[2.4,4,'w']]);
-hwall('z',-4.8,-3.6,3.6,[[-1,1,'w']]);hwall('z',4.8,-3.6,3.6,[[-1,1,'w']]);
+hwall('z',-4.8,-3.6,3.6,[]);hwall('z',4.8,-3.6,3.6,[[-1,1,'w']]);
 const ft=TX.wood[0].clone();ft.needsUpdate=true;ft.repeat.set(2.4,1.9);deco(0,.011,0,9.6,.02,7.6,new THREE.MeshLambertMaterial({map:ft}),0);
-box(-2.7,1.2,1.8,1,.9,'wood');box(3,-2.5,3,1,.7,'red');box(-4.3,-2,.6,2.2,1.8,'wood');
+box(2.7,1.2,1.8,1,.9,'wood');box(3,-2.5,3,1,.7,'red');box(-4.3,-2,.6,2.2,1.8,'wood');
 box(0,5.3,11,2.6,.3,'wood');box(-3.6,6.5,3.8,.15,1,'wood');box(3.6,6.5,3.8,.15,1,'wood');
 [-5.3,-1.6,1.6,5.3].forEach(x=>box(x,6.5,.3,.3,6.4,'wood'));box(-3.5,5,1.6,.6,.5,'wood');box(3.5,5,1.6,.6,.5,'wood');
 // ---- Segundo andar + varanda ----
 const Y0=3.2,H2=3.0,railM=new THREE.MeshLambertMaterial({color:0xdccfae});
-deco(0,Y0,0,10.2,.16,8.0,new THREE.MeshLambertMaterial({map:(()=>{const t=TX.wood[0].clone();t.needsUpdate=true;t.repeat.set(2.55,2.0);return t})()}),0);
+deco(-4.55,Y0,0,1.1,.16,8.0,new THREE.MeshLambertMaterial({map:(()=>{const t=TX.wood[0].clone();t.needsUpdate=true;t.repeat.set(.28,2.0);return t})()}),0);
+deco(1.3,Y0,0,7.6,.16,8.0,new THREE.MeshLambertMaterial({map:(()=>{const t=TX.wood[0].clone();t.needsUpdate=true;t.repeat.set(1.9,2.0);return t})()}),0);
+deco(-3.25,Y0,-2.925,1.5,.16,2.15,new THREE.MeshLambertMaterial({map:(()=>{const t=TX.wood[0].clone();t.needsUpdate=true;t.repeat.set(.38,.54);return t})()}),0);
+deco(-3.25,Y0,2.925,1.5,.16,2.15,new THREE.MeshLambertMaterial({map:(()=>{const t=TX.wood[0].clone();t.needsUpdate=true;t.repeat.set(.38,.54);return t})()}),0);
 deco(0,Y0+.1,5.45,11.4,.22,3,new THREE.MeshLambertMaterial({map:(()=>{const t=TX.wood[0].clone();t.needsUpdate=true;t.repeat.set(2.85,.75);return t})()}),1);
 for(let x=-5.4;x<=5.41;x+=1.08){deco(x,Y0+.6,6.9,.1,.8,.1,railM,0)}
 deco(0,Y0+1.02,6.9,11.2,.12,.12,railM,0);
@@ -179,15 +182,18 @@ hwallD('z',-4.8,Y0,H2,-3.6,3.6,[[-1,1]]);hwallD('z',4.8,Y0,H2,-3.6,3.6,[[-1,1]])
 hwallDCol('x',-3.8,-5,5,[[-3.3,-1.7]]);
 hwallDCol('x',3.8,-5,5,[[-4,-2.4],[-.9,.9,'d'],[2.4,4]]);
 hwallDCol('z',-4.8,-3.6,3.6,[[-1,1]]);hwallDCol('z',4.8,-3.6,3.6,[[-1,1]]);
-const rg=new THREE.Group(),rm=new THREE.Mesh(new THREE.ConeGeometry(1,2.4,4),roofM);rm.rotation.y=Math.PI/4;rm.position.y=1.2;rm.castShadow=true;rm.receiveShadow=true;rg.add(rm);rg.scale.set(8.4,1,10.3);rg.position.set(0,Y0+H2,0);scene.add(rg);shootables.push(rm);
+const rg=new THREE.Group(),rm=new THREE.Mesh(new THREE.ConeGeometry(1,2.4,4),roofM);rm.rotation.y=Math.PI/4;rm.position.y=1.2;rm.castShadow=true;rm.receiveShadow=true;rg.add(rm);rg.scale.set(7.92,1,6.6);rg.position.set(0,Y0+H2,0);scene.add(rg);shootables.push(rm);
+// Alpendres planos cobrindo a varanda (sul) e o lado oposto (norte), apoiados nos pilares
+deco(0,Y0+H2-.05,5.6,11.8,.16,3.6,roofM,1);
 // teto do 2º andar (e da varanda) agora bloqueia o pulo, sem impedir o movimento horizontal
-platforms.push({x0:-5.8,x1:5.8,z0:-4.2,z1:7.1,y:Y0+H2-.05,ceilOnly:true});
+platforms.push({x0:-5.8,x1:5.8,z0:-4.6,z1:7.1,y:Y0+H2-.05,ceilOnly:true});
 // pilares de apoio da varanda, sob o telhado estendido, iguais dos dois lados da casa
 {const pillarM=new THREE.MeshLambertMaterial({color:0xdccfae}),pillarG=new THREE.CylinderGeometry(.13,.15,2.8,10),pY=Y0+.21+1.4;
- [[-5.3,6.6],[5.3,6.6],[-5.3,4.3],[5.3,4.3],[-5.3,-4.3],[5.3,-4.3]].forEach(([x,z])=>{const p=new THREE.Mesh(pillarG,pillarM);p.position.set(x,pY,z);p.castShadow=true;p.receiveShadow=true;scene.add(p);shootables.push(p)})}
+ [[-5.3,6.6],[5.3,6.6],[-5.3,4.3],[5.3,4.3]].forEach(([x,z])=>{const p=new THREE.Mesh(pillarG,pillarM);p.position.set(x,pY,z);p.castShadow=true;p.receiveShadow=true;scene.add(p);shootables.push(p)})}
 // ---- Escada externa para o 2º andar (lado leste) ----
-for(let i=0;i<11;i++)box(8.0-i*0.31,2.0,0.55,1.5,+((i+1)*(Y0/11)).toFixed(2),'wood');
-platform(0,0,10.2,8.0,Y0+.08);platform(0,5.45,11.4,3,Y0+.21);
+// ---- Escada reta interna (lado oeste, centralizada na parede e encostada nela) ----
+for(let i=0;i<11;i++)box(-3.3,1.59-i*0.318,1.3,0.42,+((i+1)*(Y0/11)).toFixed(2),'wood');
+platform(-4.55,0,1.1,8.0,Y0+.08);platform(1.3,0,7.6,8.0,Y0+.08);platform(-3.25,-2.925,1.5,2.15,Y0+.08);platform(-3.25,2.925,1.5,2.15,Y0+.08);platform(0,5.45,11.4,3,Y0+.21);
 deco(3.2,7.6,-2,.9,5.0,.9,brickM,1);
 const trM=new THREE.MeshLambertMaterial({color:0x6b4423}),leafM=[0x3f8a3a,0x357a32,0x4a9a44].map(c=>new THREE.MeshLambertMaterial({color:c})),trG=new THREE.CylinderGeometry(.14,.52,3.4,10),branchG=new THREE.CylinderGeometry(.045,.1,1.15,6),leafG=new THREE.SphereGeometry(1,10,8);
 function tree(x,z,sc){const t=new THREE.Mesh(trG,trM);t.scale.set(sc,sc,sc);t.position.set(x,1.7*sc,z);t.castShadow=true;t.receiveShadow=true;scene.add(t);solids.push(t);shootables.push(t);
