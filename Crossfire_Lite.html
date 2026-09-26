@@ -254,7 +254,7 @@ function tone(fr,d,v,ty='square'){if(!ac)return;const o=ac.createOscillator(),g=
 
 // ---------- Estado ----------
 const keys={},bots=[],fxs=[];
-const P={x:0,y:0,z:26,vx:0,vz:0,vy:0,yaw:0,pitch:0,hp:100,eye:1.7,ground:true};
+const P={x:0,y:0,z:26,vx:0,vz:0,vy:0,yaw:0,pitch:0,hp:100,armor:0,helmet:false,eye:1.7,ground:true};
 let ammo=30,reserve=90,reloading=0,heat=0,kick=0,fireCd=0,down=false,kills=0,hs=0,round=0,state='menu',roundT=0,bobT=0,flash=0,gunKick=0,hm=0,dmgA=0;
 let playing=false,locked=false,nolock=false,needNew=true;
 let money=3000,inv={pri:null,sec:"glock"},mags={glock:{ammo:20,reserve:80}},scoped=false,edge=false,shopOpen=false,baseFov=75,sens=1,wpn=2,crouch=false,silent=false,noise=0,shotN=0,stepT=0,kAnim=0;
@@ -310,6 +310,9 @@ const W={
  heavy:{n:'M249 PESADA',slot:1,dmg:24,rate:.09,mag:100,res:100,rt:3.4,auto:1,sp:.014,pel:1,price:4200,mz:-.7,kick:.9,heavy:1,desc:'100 balas no pente! Poder de fogo altíssimo, mas te deixa mais lento enquanto empunhada.'},
  knife:{n:'FACA',slot:3,dmg:0,rate:.5,mag:1,res:0,rt:1,auto:1,pel:1,price:0,mz:0,kick:0,desc:''}};
 for(const k in W)W[k].id=k;
+const EQUIP={
+ vest:{n:'COLETE',price:650,desc:'Armadura 100. Absorve metade do dano recebido até acabar.'},
+ vesthelm:{n:'COLETE + CAPACETE',price:1000,desc:'Armadura 100 + protege a cabeça. Absorve metade do dano recebido até acabar.'}};
 const gw=()=>wpn==3?W.knife:W[wpn==1?inv.pri:inv.sec];
 function save(){if(wpn!=3){mags[gw().id]={ammo,reserve}}}
 function equip(){knife.visible=wpn==3;gun.visible=wpn!=3;if(wpn!=3){const w=gw();for(const k in VM)VM[k].visible=k==w.id;mf.position.z=w.mz;const m=mags[w.id];ammo=m.ammo;reserve=m.reserve}}
@@ -448,7 +451,7 @@ function ejectShell(w){const g=VM[w.id];if(!g)return;const wp=new THREE.Vector3(
  pushFx({m,t:1.1,fadeMax:.35,v:new THREE.Vector3(1.3+Math.random()*.6,2.3+Math.random(),-.4+Math.random()*.5),grav:9,spin:16})}
 function feed(t){const d=document.createElement('div');d.textContent=t;$('feed').appendChild(d);setTimeout(()=>d.remove(),4000)}
 function banner(t){const b=$('banner');b.textContent=t;b.style.opacity=1;clearTimeout(banner.h);banner.h=setTimeout(()=>b.style.opacity=0,1800)}
-function hurt(d){P.hp-=d;dmgA=.7;tone(140,.12,.25,'sawtooth');if(P.hp<=0&&state!='dead')die()}
+function hurt(d){if(P.armor>0){const blocked=Math.min(P.armor,d*.5);d-=blocked;P.armor-=blocked}P.hp-=d;dmgA=.7;tone(140,.12,.25,'sawtooth');if(P.hp<=0&&state!='dead')die()}
 function die(){if(mode=='snd'&&state=='fight'){sndRoundLose('Você morreu');return}
  P.hp=0;state='dead';playing=false;needNew=true;tone(90,.7,.35,'sawtooth');if(document.exitPointerLock)document.exitPointerLock();
  $('msg').textContent=mode=='zombie'?('Você morreu na onda '+zWave+' · Kills: '+kills):('Você morreu no round '+round+' · Kills: '+kills+' · Headshots: '+hs);
@@ -613,7 +616,7 @@ function update(dt){
   if(f.t<=0){scene.remove(f.m);if(f.d&&f.m.geometry)f.m.geometry.dispose();fxs.splice(i,1)}}
  hm=Math.max(0,hm-dt*5);dmgA=Math.max(0,dmgA-dt*1.2);
  // HUD
- $('hp').textContent='❤ '+Math.ceil(P.hp);$('am').innerHTML=wpn==3?'FACA':'<small>'+gw().n+'</small> '+ammo+' <small>/ '+reserve+(reloading>0?' · RECARREGANDO':'')+'</small>';
+ $('hp').textContent='❤ '+Math.ceil(P.hp)+(P.armor>0?' 🛡'+Math.ceil(P.armor)+(P.helmet?'⛑':''):'');$('am').innerHTML=wpn==3?'FACA':'<small>'+gw().n+'</small> '+ammo+' <small>/ '+reserve+(reloading>0?' · RECARREGANDO':'')+'</small>';
  $('st').textContent=(['','[1] '+(inv.pri?W[inv.pri].n:'—'),'[2] '+W[inv.sec].n,'[3] FACA'][wpn])+' · $'+money+' · B LOJA'+(crouch?' · AGACHADO':keys.ShiftLeft?' · ANDANDO':'')+(silent?' · SILENCIOSO':'');$('ch').style.display=wpn!=3&&!scoped?'block':'none';$('scope').style.display=scoped?'block':'none';
  if(mode=='snd')$('top').textContent='RODADA '+round+' · PLACAR '+sndWin+'x'+sndLoss+' · INIMIGOS '+alive()+(bomb?' · 💣 '+Math.max(0,Math.ceil(bomb.timer))+'s':'');
  else if(mode=='zombie'){$('top').textContent='ONDA '+zWave+' · KILLS '+kills+' · ZUMBIS '+alive();$('basehp').style.display='block';updateBaseUI()}
@@ -636,7 +639,7 @@ function radar(){const c=rctx,S=520,k=S/64;c.setTransform(1,0,0,1,0,0);c.clearRe
 // ---------- Controle / Loop ----------
 function newGame(m){mode=m||mode;for(const b of bots)scene.remove(b.g);bots.length=0;
  for(const q of goos)scene.remove(q.m);goos.length=0;
- Object.assign(P,{x:0,y:0,z:26,vx:0,vz:0,vy:0,yaw:0,pitch:0,hp:100,eye:1.7,ground:true});
+ Object.assign(P,{x:0,y:0,z:26,vx:0,vz:0,vy:0,yaw:0,pitch:0,hp:100,armor:0,helmet:false,eye:1.7,ground:true});
  inv={pri:null,sec:'glock'};mags={glock:{ammo:W.glock.mag,reserve:W.glock.res}};wpn=2;scoped=false;equip();reloading=0;kills=0;hs=0;round=0;
  bomb=null;planting=0;hideBombModel();sndWin=0;sndLoss=0;zWave=0;
  $('plant').style.display='none';$('pmsg').style.display='none';
@@ -652,13 +655,30 @@ function renderShop(){$('mny').textContent='$ '+money;let h='';
   for(const k in W){const w=W[k];if(w.slot!=g[1])continue;const own=inv.pri==k||inv.sec==k;
    h+='<div class="wc'+(own?' own':money<w.price?' no':'')+'" data-id="'+k+'"><b>'+w.n+'</b><span style="float:right;color:#f5c542">'+(own?'EQUIPADA':'$'+w.price)+'</span><small>Dano '+w.dmg+(w.pel>1?' x'+w.pel:'')+' · Carregador '+w.mag+' · Reserva '+w.res+'<br>'+w.desc+'</small></div>'}
   h+='</div>'}
+ h+='<h3>PROTEÇÃO</h3><div class="wg">';
+ for(const k in EQUIP){const eq=EQUIP[k];const own=(k=='vest'&&P.armor>0&&!P.helmet)||(k=='vesthelm'&&P.armor>0&&P.helmet);
+  h+='<div class="wc'+(own?' own':money<eq.price?' no':'')+'" data-cat="equip" data-id="'+k+'"><b>'+eq.n+'</b><span style="float:right;color:#f5c542">'+(own?'EQUIPADO':'$'+eq.price)+'</span><small>'+eq.desc+'</small></div>'}
+ h+='</div>';
+ h+='<h3>MUNIÇÃO</h3><div class="wg">';
+ for(const slot of [2,1]){const id=slot==1?inv.pri:inv.sec;if(!id)continue;const w=W[id];const price=Math.round(w.res*1.8);const m=mags[id]||{reserve:0};const full=m.reserve>=w.res;
+  h+='<div class="wc'+(full?' own':money<price?' no':'')+'" data-cat="ammo" data-slot="'+slot+'"><b>MUNIÇÃO · '+w.n+'</b><span style="float:right;color:#f5c542">'+(full?'CHEIA':'$'+price)+'</span><small>Reabastece a reserva para '+w.res+' balas.</small></div>'}
+ h+='</div>';
  $('shl').innerHTML=h}
 function buy(id){const w=W[id];if(!w||inv.pri==id||inv.sec==id||money<w.price)return;save();money-=w.price;
  const old=w.slot==1?inv.pri:inv.sec;if(old)delete mags[old];if(w.slot==1)inv.pri=id;else inv.sec=id;
  mags[id]={ammo:w.mag,reserve:w.res};wpn=w.slot;reloading=0;scoped=false;equip();tone(700,.08,.15,'sine');renderShop()}
+function buyEquip(id){const eq=EQUIP[id];if(!eq||money<eq.price)return;
+ const own=(id=='vest'&&P.armor>0&&!P.helmet)||(id=='vesthelm'&&P.armor>0&&P.helmet);if(own)return;
+ money-=eq.price;P.armor=100;P.helmet=(id=='vesthelm');tone(700,.08,.15,'sine');renderShop()}
+function buyAmmo(slot){const id=slot==1?inv.pri:inv.sec;if(!id)return;const w=W[id];const price=Math.round(w.res*1.8);
+ const m=mags[id];if(!m||money<price||m.reserve>=w.res)return;money-=price;m.reserve=w.res;if(wpn==slot)reserve=m.reserve;tone(700,.08,.15,'sine');renderShop()}
 function toggleShop(){if(shopOpen){resume();return}
  if(!playing||state=='dead')return;shopOpen=true;playing=false;down=false;edge=false;scoped=false;renderShop();$('shop').style.display='flex';if(document.exitPointerLock)document.exitPointerLock()}
-$('shl').onclick=e=>{const c=e.target.closest('.wc');if(c)buy(c.dataset.id)};$('shx').onclick=()=>{if(shopOpen)resume()};
+$('shl').onclick=e=>{const c=e.target.closest('.wc');if(!c)return;
+ if(c.dataset.cat=='equip')buyEquip(c.dataset.id);
+ else if(c.dataset.cat=='ammo')buyAmmo(+c.dataset.slot);
+ else buy(c.dataset.id)};
+$('shx').onclick=()=>{if(shopOpen)resume()};
 cvs.addEventListener('click',()=>{if(playing&&!locked&&!nolock){try{const r=cvs.requestPointerLock();if(r&&r.catch)r.catch(()=>{})}catch(e){}}});
 function enter(m){if(needNew){newGame(m||mode);needNew=false}
  ac=ac||new(window.AudioContext||window.webkitAudioContext)();if(ac.state=='suspended')ac.resume();
