@@ -179,7 +179,12 @@ hwallD('z',-4.8,Y0,H2,-3.6,3.6,[[-1,1]]);hwallD('z',4.8,Y0,H2,-3.6,3.6,[[-1,1]])
 hwallDCol('x',-3.8,-5,5,[[-3.3,-1.7]]);
 hwallDCol('x',3.8,-5,5,[[-4,-2.4],[-.9,.9,'d'],[2.4,4]]);
 hwallDCol('z',-4.8,-3.6,3.6,[[-1,1]]);hwallDCol('z',4.8,-3.6,3.6,[[-1,1]]);
-const rg=new THREE.Group(),rm=new THREE.Mesh(new THREE.ConeGeometry(1,2.4,4),roofM);rm.rotation.y=Math.PI/4;rm.position.y=1.2;rm.castShadow=true;rm.receiveShadow=true;rg.add(rm);rg.scale.set(7.92,1,6.5);rg.position.set(0,Y0+H2,0);scene.add(rg);shootables.push(rm);
+const rg=new THREE.Group(),rm=new THREE.Mesh(new THREE.ConeGeometry(1,2.4,4),roofM);rm.rotation.y=Math.PI/4;rm.position.y=1.2;rm.castShadow=true;rm.receiveShadow=true;rg.add(rm);rg.scale.set(8.4,1,10.3);rg.position.set(0,Y0+H2,0);scene.add(rg);shootables.push(rm);
+// teto do 2º andar (e da varanda) agora bloqueia o pulo, sem impedir o movimento horizontal
+platforms.push({x0:-5.8,x1:5.8,z0:-4.2,z1:7.1,y:Y0+H2-.05,ceilOnly:true});
+// pilares de apoio da varanda, sob o telhado estendido, iguais dos dois lados da casa
+{const pillarM=new THREE.MeshLambertMaterial({color:0xdccfae}),pillarG=new THREE.CylinderGeometry(.13,.15,2.8,10),pY=Y0+.21+1.4;
+ [[-5.3,6.6],[5.3,6.6],[-5.3,4.3],[5.3,4.3],[-5.3,-4.3],[5.3,-4.3]].forEach(([x,z])=>{const p=new THREE.Mesh(pillarG,pillarM);p.position.set(x,pY,z);p.castShadow=true;p.receiveShadow=true;scene.add(p);shootables.push(p)})}
 // ---- Escada externa para o 2º andar (lado leste) ----
 for(let i=0;i<11;i++)box(8.0-i*0.31,2.0,0.55,1.5,+((i+1)*(Y0/11)).toFixed(2),'wood');
 platform(0,0,10.2,8.0,Y0+.08);platform(0,5.45,11.4,3,Y0+.21);
@@ -215,12 +220,12 @@ texFloor.repeat.set(20,20);
 const floor=new THREE.Mesh(new THREE.PlaneGeometry(62,62),new THREE.MeshLambertMaterial({map:texFloor}));floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);shootables.push(floor);
 const SP=[[-25,-25],[25,-25],[0,-26],[-26,0],[26,4],[-25,25],[26,26],[0,-24]];
 function hitsBox(x,z,y,r){for(const b of boxes){if(b.h<=y+.35)continue;if(x>b.x0-r&&x<b.x1+r&&z>b.z0-r&&z<b.z1+r)return true}
- for(const pl of platforms){if(y<pl.y-.6)continue;if(pl.y<=y+.35)continue;if(x>pl.x0-r&&x<pl.x1+r&&z>pl.z0-r&&z<pl.z1+r)return true}
+ for(const pl of platforms){if(pl.ceilOnly)continue;if(y<pl.y-.6)continue;if(pl.y<=y+.35)continue;if(x>pl.x0-r&&x<pl.x1+r&&z>pl.z0-r&&z<pl.z1+r)return true}
  for(const uw of upperWalls){if(y<Y0-.6||y>Y0+H2)continue;if(x>uw.x0-r&&x<uw.x1+r&&z>uw.z0-r&&z<uw.z1+r)return true}
  return false}
 function ceilingAt(x,z,y){let c=1e9;for(const pl of platforms)if(x>pl.x0&&x<pl.x1&&z>pl.z0&&z<pl.z1&&pl.y>y+.15&&pl.y<c)c=pl.y;return c}
 function groundAt(x,z,y){let g=0;for(const b of boxes)if(x>b.x0-.3&&x<b.x1+.3&&z>b.z0-.3&&z<b.z1+.3&&b.h<=y+.35&&b.h>g)g=b.h;
- for(const pl of platforms)if(x>pl.x0&&x<pl.x1&&z>pl.z0&&z<pl.z1&&y>=pl.y-.6&&pl.y<=y+.35&&pl.y>g)g=pl.y;
+ for(const pl of platforms)if(!pl.ceilOnly&&x>pl.x0&&x<pl.x1&&z>pl.z0&&z<pl.z1&&y>=pl.y-.6&&pl.y<=y+.35&&pl.y>g)g=pl.y;
  return g}
 function move(p,dx,dz,y){let bl=false;if(!hitsBox(p.x+dx,p.z,y,.4))p.x+=dx;else bl=true;if(!hitsBox(p.x,p.z+dz,y,.4))p.z+=dz;else bl=true;return bl}
 function avoidDir(b,x,z,dx,dz,dt){
